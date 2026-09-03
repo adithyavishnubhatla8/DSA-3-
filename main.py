@@ -1,65 +1,79 @@
-def compute_lps(pattern: str) -> list[int]:
-    """Compute the Longest Prefix Suffix (LPS) array for KMP."""
-    lps = [0] * len(pattern)
-    length = 0
-    i = 1
+"""TextHack text analytics system with three query categories."""
 
-    while i < len(pattern):
-        if pattern[i] == pattern[length]:
-            length += 1
-            lps[i] = length
-            i += 1
-        else:
-            if length != 0:
-                length = lps[length - 1]
-            else:
-                lps[i] = 0
-                i += 1
+ARTICLES = [
+    "Python is widely used for Data Science and Machine Learning.",
+    "Machine Learning is an important area of Artificial Intelligence.",
+    "Text Analytics helps in processing and analysing textual data.",
+    "Python programming is useful for Artificial Intelligence applications.",
+    "Data Science uses statistics, programming and Machine Learning.",
+]
 
-    return lps
+QUERY_CATEGORIES = {
+    1: "Single Keyword Search",
+    2: "Multi-Keyword Search",
+    3: "Exact Phrase Search",
+}
 
 
-def kmp_search(text: str, pattern: str) -> tuple[bool, list[int]]:
-    """Search for pattern in text using KMP and return match status plus LPS array."""
-    if pattern == "":
-        return True, []
+def search_articles(choice: int, query: str, articles: list[str] = ARTICLES) -> list[int]:
+    """Return zero-based indexes of articles matching the selected query."""
+    normalized_query = query.strip().lower()
+    if not normalized_query or choice not in QUERY_CATEGORIES:
+        return []
 
-    lower_text = text.lower()
-    lower_pattern = pattern.lower()
-    lps = compute_lps(lower_pattern)
-    i = 0
-    j = 0
+    if choice == 2:
+        terms = normalized_query.split()
+        return [
+            index
+            for index, article in enumerate(articles)
+            if all(term in article.lower() for term in terms)
+        ]
 
-    while i < len(lower_text):
-        if lower_text[i] == lower_pattern[j]:
-            i += 1
-            j += 1
+    return [
+        index
+        for index, article in enumerate(articles)
+        if normalized_query in article.lower()
+    ]
 
-            if j == len(lower_pattern):
-                return True, lps
-        else:
-            if j != 0:
-                j = lps[j - 1]
-            else:
-                i += 1
 
-    return False, lps
+def display_repository(articles: list[str] = ARTICLES) -> None:
+    """Display all articles in the repository."""
+    print("========== TEXT HACK ARTICLE REPOSITORY ==========")
+    for index, article in enumerate(articles, start=1):
+        print(f"Article {index}: {article}")
+
+
+def display_categories() -> None:
+    """Display the query categories available to the user."""
+    print("\n========== QUERY CATEGORIES ==========")
+    for number, category in QUERY_CATEGORIES.items():
+        print(f"{number}. {category}")
+
+
+def main() -> None:
+    display_repository()
+    display_categories()
+
+    try:
+        choice = int(input("\nEnter your choice (1-3): "))
+    except ValueError:
+        print("\nInvalid choice!")
+        return
+
+    if choice not in QUERY_CATEGORIES:
+        print("\nInvalid choice!")
+        return
+
+    query = input("Enter your search query: ")
+    matches = search_articles(choice, query)
+
+    print("\n========== SEARCH RESULTS ==========")
+    for index in matches:
+        print(f"\nArticle {index + 1}: {ARTICLES[index]}")
+
+    if not matches:
+        print("\nNo matching articles found.")
 
 
 if __name__ == "__main__":
-    try:
-        with open("Sample.txt", "r", encoding="utf-8") as file:
-            text = file.read()
-    except FileNotFoundError:
-        print("Error: Sample.txt not found.")
-    else:
-        print("-----File Content-----")
-        print(text)
-        pattern = input("\nEnter the word to search: ")
-        found, lps = kmp_search(text, pattern)
-
-        print("\nPattern LPS array:", lps)
-        if found:
-            print("\n✅ Pattern Found")
-        else:
-            print("\n❌ Pattern Not Found") 
+    main()
